@@ -4,5 +4,5 @@ include_directories(${PROJECT_SOURCE_DIR}/extern/pmp-library/external/glew/inclu
 include_directories(${PROJECT_SOURCE_DIR}/extern/pmp-library/external/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/extern/pmp-library/external/imgui)
 
-add_executable(mpviewer mpviewer.cpp algorithm/CPCSurfaceUnfolding.cpp)
-target_link_libraries(mpviewer pmp_vis)
+add_executable(demoviewer demoviewer.cpp algorithm/CPCSurfaceUnfolding.cpp EmbeddedCurve.cpp EmbeddedCurve.h)
+target_link_libraries(demoviewer pmp_vis)
