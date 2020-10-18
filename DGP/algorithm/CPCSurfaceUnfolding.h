@@ -18,6 +18,8 @@ public:
 
     void segmentation();
 
+    void iterative_unfolding();
+
     void unfolding_strip(pmp::SurfaceMesh& mesh, pmp::Halfedge h, Eigen::Vector3d fn);
 
     void rotate_strip(pmp::SurfaceMesh &mesh, pmp::Halfedge h, eigen_ext::DualQuaternion<double> dualquat);

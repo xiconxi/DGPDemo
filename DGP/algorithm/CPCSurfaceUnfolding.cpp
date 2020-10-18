@@ -26,22 +26,19 @@ void CPCSurfaceUnfolding::segmentation()
         if (vf.idx() % n == int(n / 2) and vt.idx() % n == int(n / 2))
         {
             pmp::Halfedge h_mesh_ = h;
-            for (bool strip = false; v_strip.idx() < mesh_.n_vertices() - 2;
-                 strip = !strip)
+            for (bool strip = false; v_strip.idx() < mesh_.n_vertices() - 2; strip = !strip)
             {
                 v_strip = mesh_.to_vertex(mesh_.next_halfedge(h_mesh_));
                 auto nv = out_mesh.add_vertex(mesh_.position(v_strip));
                 out_mesh.add_triangle(vf, vt, nv);
                 if (strip)
                 {
-                    h_mesh_ =
-                        mesh_.opposite_halfedge(mesh_.next_halfedge(h_mesh_));
+                    h_mesh_ = mesh_.opposite_halfedge(mesh_.next_halfedge(h_mesh_));
                     vf = nv;
                 }
                 else
                 {
-                    h_mesh_ =
-                        mesh_.opposite_halfedge(mesh_.prev_halfedge(h_mesh_));
+                    h_mesh_ = mesh_.opposite_halfedge(mesh_.prev_halfedge(h_mesh_));
                     vt = nv;
                 }
             }
@@ -92,8 +89,7 @@ void CPCSurfaceUnfolding::segmentation()
     }
     out_mesh.remove_edge_property(e_is_axis);
 
-    auto v_dq =
-        out_mesh.add_vertex_property<std::vector<DualQuatd>>("v:dualquat");
+    auto v_dq = out_mesh.add_vertex_property<std::vector<DualQuatd>>("v:dualquat");
     auto v_scalp = out_mesh.add_vertex_property<Eigen::Vector3d>("v:scalp");
     for (auto v : out_mesh.vertices())
     {
@@ -114,12 +110,14 @@ void CPCSurfaceUnfolding::segmentation()
     out_mesh.write("unfolded.obj");
 }
 
+void CPCSurfaceUnfolding::iterative_unfolding() {}
+
 void CPCSurfaceUnfolding::unfolding_longitude(pmp::SurfaceMesh &mesh,
                                               std::vector<pmp::Halfedge> &axis)
 {
     pmp::SurfaceNormals::compute_face_normals(mesh);
     auto v_dq = mesh.get_vertex_property<std::vector<DualQuatd>>("v:dualquat");
-//    auto fnormals = mesh.get_face_property<pmp::Normal>("f:normal");
+    //    auto fnormals = mesh.get_face_property<pmp::Normal>("f:normal");
     for (auto h1 : axis)
     {
         for (auto v : mesh.vertices())
@@ -132,8 +130,7 @@ void CPCSurfaceUnfolding::unfolding_longitude(pmp::SurfaceMesh &mesh,
 }
 
 // unfolding the triangle-strip with specific axis
-void CPCSurfaceUnfolding::unfolding_strip(pmp::SurfaceMesh &mesh,
-                                          pmp::Halfedge h,
+void CPCSurfaceUnfolding::unfolding_strip(pmp::SurfaceMesh &mesh, pmp::Halfedge h,
                                           Eigen::Vector3d target_fn)
 {
     auto fnormals = mesh.get_face_property<pmp::Normal>("f:normal");
@@ -152,8 +149,7 @@ void CPCSurfaceUnfolding::unfolding_strip(pmp::SurfaceMesh &mesh,
 }
 
 // unfolding the triangle-strip with specific axis
-void CPCSurfaceUnfolding::rotate_strip(pmp::SurfaceMesh &mesh, pmp::Halfedge h,
-                                       DualQuatd dualquat)
+void CPCSurfaceUnfolding::rotate_strip(pmp::SurfaceMesh &mesh, pmp::Halfedge h, DualQuatd dualquat)
 {
     auto V_dq = mesh.get_vertex_property<std::vector<DualQuatd>>("v:dualquat");
     for (auto hh = h; !mesh.is_boundary(hh);)
@@ -178,10 +174,8 @@ void CPCSurfaceUnfolding::unfolding_latitude(pmp::SurfaceMesh &mesh,
     {
         auto p1 = Eigen::Vector3d(mesh.position(mesh.from_vertex(axis[i])));
         auto p2 = Eigen::Vector3d(mesh.position(mesh.to_vertex(axis[i])));
-        auto p0 =
-            i == 0
-                ? p1 - Eigen::Vector3d(0, 0, 1)
-                : Eigen::Vector3d(mesh.position(mesh.from_vertex(axis[i - 1])));
+        auto p0 = i == 0 ? p1 - Eigen::Vector3d(0, 0, 1)
+                         : Eigen::Vector3d(mesh.position(mesh.from_vertex(axis[i - 1])));
         for (auto v : mesh.vertices())
             v_dq[v].emplace_back(*v_dq[v].rbegin());
         for (int j = i; j < axis.size(); j++)
@@ -189,10 +183,12 @@ void CPCSurfaceUnfolding::unfolding_latitude(pmp::SurfaceMesh &mesh,
             auto v = mesh.to_vertex(axis[j]);
             auto axis_v = (p2 - p1).cross(p1 - p0).normalized();
             double angle = std::acos((p1 - p0).normalized().dot((p2 - p1).normalized()));
-            auto dualquat = eigen_ext::convert_to_dualquat( axis_v, p1.cross(axis_v), angle, 0.0);
+            auto dualquat = eigen_ext::convert_to_dualquat(axis_v, p1.cross(axis_v), angle, 0.0);
             dualquat = dualquat.normalized();
-            mesh.position(v) = eigen_ext::transform_point(dualquat, Eigen::Vector3d(mesh.position(v)))
-                                   .dual().vec();
+            mesh.position(v) =
+                eigen_ext::transform_point(dualquat, Eigen::Vector3d(mesh.position(v)))
+                    .dual()
+                    .vec();
             *v_dq[v].rbegin() = (dualquat * *v_dq[v].rbegin()).normalized();
 
             rotate_strip(mesh, axis[j], dualquat);
@@ -202,8 +198,7 @@ void CPCSurfaceUnfolding::unfolding_latitude(pmp::SurfaceMesh &mesh,
     pmp::SurfaceNormals::compute_face_normals(mesh);
 }
 
-void CPCSurfaceUnfolding::export_to_svg(pmp::SurfaceMesh &mesh,
-                                        std::string file_path)
+void CPCSurfaceUnfolding::export_to_svg(pmp::SurfaceMesh &mesh, std::string file_path)
 {
     int width = 2100, height = 2970;
     std::string a4_svg_header =
@@ -226,8 +221,7 @@ void CPCSurfaceUnfolding::export_to_svg(pmp::SurfaceMesh &mesh,
             if (hh == h)
                 break;
         }
-        polygon +=
-            "\" fill=\"#c6c602\" stroke=\"black\" stroke-width=\"8\"/></svg>";
+        polygon += "\" fill=\"#c6c602\" stroke=\"black\" stroke-width=\"8\"/></svg>";
         break;
     }
 
