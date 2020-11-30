@@ -2,7 +2,7 @@
 // Created by $Pupa on 2020/9/15.
 //
 
-#include "CPCSurfaceUnfolding.h"
+#include <pupa/pmp/CPCSurfaceUnfolding.h>
 #include <stdint.h>
 #include <pmp/algorithms/SurfaceNormals.h>
 #include <fstream>

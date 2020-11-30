@@ -4,11 +4,11 @@
 
 #ifndef PMP_CPCSURFACEUNFOLDING_H
 #define PMP_CPCSURFACEUNFOLDING_H
-#include "pmp/SurfaceMesh.h"
+#include <pmp/SurfaceMesh.h>
 #include <stdint.h>
 
 
-#include "dualquat/dualquat.h"
+#include <dualquat.h>
 
 
 

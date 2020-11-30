@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <pmp/SurfaceMesh.h>
+
 namespace pmp_tools {
 
 //!> geo-tools: base class for generate specific isoline on scalar field

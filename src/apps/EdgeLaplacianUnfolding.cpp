@@ -5,8 +5,7 @@
 #include <pmp/algorithms/SurfaceParameterization.h>
 #include <imgui.h>
 
-
-#include "algorithm/TriangleStripUnfolding.h"
+#include <pupa/pmp/TriangleStripUnfolding.h>
 
 using namespace pmp;
 
@@ -35,6 +34,9 @@ Viewer::Viewer(const char* title, int width, int height)
         mesh_.add_triangle(pmp::Vertex(i-1), pmp::Vertex(i), pmp::Vertex(n+i-1));
         mesh_.add_triangle(pmp::Vertex(i), pmp::Vertex(i+n), pmp::Vertex(n+i-1));
     }
+
+    BoundingBox bb = mesh_.bounds();
+    set_scene((vec3)bb.center(), 0.5 * bb.size());
 }
 
 
@@ -58,6 +60,8 @@ void Viewer::process_imgui()
 //        CPCSurfaceUnfolding unfolding(mesh_);
 //        unfolding.segmentation();
 
+        BoundingBox bb = mesh_.bounds();
+        set_scene((vec3)bb.center(), 0.5 * bb.size());
         update_mesh();
     }
 
@@ -66,14 +70,9 @@ void Viewer::process_imgui()
 
 int main(int argc, char** argv)
 {
+    Viewer window("Parametrization", 800, 600);
+    return window.run();
 #ifndef __EMSCRIPTEN__
-    Viewer window("Parametrization", 800, 600);
-    if (argc == 2)
-        window.load_mesh(argv[1]);
-    return window.run();
 #else
-    Viewer window("Parametrization", 800, 600);
-    window.load_mesh(argc == 2 ? argv[1] : "input.off");
-    return window.run();
 #endif
 }

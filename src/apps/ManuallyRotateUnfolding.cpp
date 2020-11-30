@@ -5,7 +5,7 @@
 #include <pmp/algorithms/SurfaceParameterization.h>
 #include <imgui.h>
 
-#include "algorithm/CPCSurfaceUnfolding.h"
+#include "../../include/CPCSurfaceUnfolding.h"
 
 using namespace pmp;
 
