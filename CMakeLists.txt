@@ -2,7 +2,11 @@ project(pmp-pupa)
 
 cmake_minimum_required(VERSION 3.0.2)
 
-#set(OpenGL_GL_PREFERENCE GLVND)
+set(CMAKE_CXX_STANDARD 17 )
+set(OpenGL_GL_PREFERENCE GLVND)
+
+
+
 
 # set output paths
 set(PROJECT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -18,8 +22,10 @@ set(PMP_BUILD_DOCS     OFF CACHE BOOL "")
 add_subdirectory(extern/pmp-library)
 
 # add include directories
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/extern/dualquat)
+include_directories(${PROJECT_SOURCE_DIR}/extern/entityx)
 include_directories(${PROJECT_SOURCE_DIR}/extern/pmp-library/src)
 include_directories(${PROJECT_SOURCE_DIR}/extern/pmp-library/external/imgui)
 include_directories(${PROJECT_SOURCE_DIR}/extern/pmp-library/external/eigen)
@@ -54,6 +60,7 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb")
 endif()
 
-
-# which directories to process
+set(ENTITYX_BUILD_TESTING OFF CACHE BOOL "Enable building of tests.")
+add_subdirectory(extern/entityx)
+add_subdirectory(tests)
 add_subdirectory(src)

@@ -35,8 +35,8 @@ Viewer::Viewer(const char* title, int width, int height)
         mesh_.add_triangle(pmp::Vertex(i), pmp::Vertex(i+n), pmp::Vertex(n+i-1));
     }
 
-    BoundingBox bb = mesh_.bounds();
-    set_scene((vec3)bb.center(), 0.5 * bb.size());
+    update_mesh();
+    view_all();
 }
 
 
