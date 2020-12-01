@@ -25,16 +25,28 @@ struct GLVertexArrayComponent
     virtual void unbind() = 0;
 };
 
-struct GLDrawCallComponent
-{
+struct GLDrawCallComponent {
     virtual void drawcall(GLsizei count, GLsizei mode = GL_TRIANGLES)
     {
         glDrawArrays(GL_TRIANGLES, 0, count);
     }
 };
 
-void create_surface_mesh(const Eigen::MatrixX3f& V, const Eigen::MatrixX3i& F,
-                         const Eigen::MatrixX3f& VN)
-{
+class MeshRenderSystem {
 
-}
+};
+
+class CurveRenderSystem {
+
+};
+
+class MeshFilterSystem {
+
+};
+
+
+//void update_surface_mesh(const Eigen::MatrixX3f& V, const Eigen::MatrixX3i& F,
+//                         const Eigen::MatrixX3f& VN)
+//{
+//
+//}
