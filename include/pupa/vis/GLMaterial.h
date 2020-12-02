@@ -6,6 +6,8 @@
 #include <pmp/visualization/PhongShader.h>
 #include <pmp/Types.h>
 
+namespace pupa_vis {
+
 struct GLMeshData;
 
 struct Material
@@ -17,7 +19,6 @@ public:
 
     void disable() { shader_.disable(); }
 };
-
 
 class PhongMaterial : public Material
 {
@@ -68,4 +69,6 @@ public:
     }
 };
 
-class MatCapMaterial;
+//class MatCapMaterial;
+
+} // namespace pupa_vis

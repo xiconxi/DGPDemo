@@ -7,6 +7,8 @@
 #include <pmp/visualization/GL.h>
 #include <Eigen/Dense>
 
+
+namespace pupa_vis {
 /*
 Mesh Geometric Data
 */
@@ -59,7 +61,6 @@ public:
 
     void draw_call(GLenum mode) const
     {
-        //        glDrawArrays(GL_POINTS, 0, 5884);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_);
         glDrawElements(mode, len_, GL_UNSIGNED_INT, nullptr);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -85,3 +86,5 @@ public:
 
     void unbind() const { glBindVertexArray(0); }
 };
+
+}

@@ -1,11 +1,9 @@
-project(pmp-pupa)
+project(pmp-games102)
 
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5.2)
 
 set(CMAKE_CXX_STANDARD 17 )
 set(OpenGL_GL_PREFERENCE GLVND)
-
-
 
 
 # set output paths
@@ -60,7 +58,7 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb")
 endif()
 
-set(ENTITYX_BUILD_TESTING OFF CACHE BOOL "Enable building of tests.")
-add_subdirectory(extern/entityx)
-add_subdirectory(tests)
+#set(ENTITYX_BUILD_TESTING OFF CACHE BOOL "Enable building of tests.")
+#add_subdirectory(extern/entityx)
+#add_subdirectory(tests)
 add_subdirectory(src)

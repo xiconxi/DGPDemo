@@ -6,42 +6,60 @@
 
 #include "GLVertexBuffer.h"
 #include <pmp/Types.h>
+#include <memory>
 
-struct GLMeshData
+namespace pupa_vis {
+
+struct GLMeshVertexArray
 {
 public:
+    typedef std::function<void(const ElementBuffer& buffer)> DrawCallType;
+
     VertexArray vertex_array_;
-    virtual void gl_draw()  = 0;
+
+    void gl_draw(const DrawCallType& draw_call, const ElementBuffer& buffer)
+    {
+        vertex_array_.bind();
+        draw_call(buffer);
+        vertex_array_.unbind();
+    }
+
+    static void draw_triangles(const ElementBuffer& buffer) {
+        glDepthRange(0.01, 1.0);
+        buffer.draw_call(GL_TRIANGLES);
+    }
+
+    static void draw_lines(const ElementBuffer& buffer)
+    {
+        glDepthRange(0.0, 1.0);
+        glDepthFunc(GL_LEQUAL);
+        buffer.draw_call(GL_LINES);
+        glDepthFunc(GL_LESS);
+    }
+
+    static void draw_points(const ElementBuffer& buffer)
+    {
+        glDepthRange(0.0, 1.0);
+        glDepthFunc(GL_LEQUAL);
+        buffer.draw_call(GL_POINTS);
+        glDepthFunc(GL_LESS);
+    }
 };
 
-template <int _cols> Eigen::Matrix<float, -1, _cols>
-    vertex_property(pmp::SurfaceMesh& mesh_, pmp::VertexProperty<pmp::Matrix<float, _cols, 1> > vprob)
-{
-    Eigen::MatrixXf V(mesh_.n_vertices(), _cols);
-    for (auto v : mesh_.vertices())
-        V.row(v.idx()) = Eigen::Vector<float, _cols>(vprob[v]);
-    return V;
-}
 
-
-class SurfaceGLMeshData : public GLMeshData
+class GLMeshPrimitive : public GLMeshVertexArray
 {
 public:
     VertexBuffer position_{0, 3};
     VertexBuffer vnormal_{1, 3};
-//    VertexBuffer vtex_{2, 2};
     ElementBuffer triangles_;
+    ElementBuffer edges_;
 
-    explicit SurfaceGLMeshData() = default;
-
-    void gl_draw()  override
-    {
-        vertex_array_.bind();
-        triangles_.draw_call(GL_TRIANGLES);
-        vertex_array_.unbind();
-    }
+    explicit GLMeshPrimitive() = default;
 };
+//
+//class ColorGLMeshPrimitive;
+//class TextureGLMeshPrimitive;
+//class ColorGLMeshData;
 
-class ColorSurfaceGLMeshData;
-class TextureSurfaceGLMeshData;
-class ColorGLMeshData;
+} // namespace pupa_vis
