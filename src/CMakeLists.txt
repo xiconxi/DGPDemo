@@ -1,6 +1,6 @@
 
 add_library(pmp_pupa STATIC
-
+        pupa/Common.cpp
         pupa/MinimalAreaSurface.cpp)
 
 
