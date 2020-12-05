@@ -96,31 +96,11 @@ public:
     //    }
     void do_processing() override;
 
-    void curvature_to_texcoord(const pmp::VertexProperty<double>& curvature) {
-        std::vector<double> values(mesh_.n_vertices());
-        for (auto v : mesh_.vertices())
-            values[v.idx()] = curvature[v];
-
-        std::sort(values.begin(), values.end());
-
-        size_t offset = values.size()/20;
-        double kmin = values[offset];
-        double kmax = values[values.size() - 1 - offset];
-
+    void curvature_to_texcoord(const pmp::VertexProperty<double>& curvature, double kmax) {
+        double kmin = 0;
         auto tex = mesh_.vertex_property<pmp::TexCoord>("v:tex");
-        if (kmin < 0.0) // signed
-        {
-            kmax = std::max(fabs(kmin), fabs(kmax));
-            for (auto v : mesh_.vertices())
-            {
-                tex[v] = pmp::TexCoord((0.5f * curvature[v] / kmax) + 0.5f, 0.0);
-            }
-        }
-        else // unsigned
-        {
-            for (auto v : mesh_.vertices())
-                tex[v] = pmp::TexCoord((curvature[v] - kmin) / (kmax - kmin), 0.0);
-        }
+        for (auto v : mesh_.vertices())
+            tex[v] = pmp::TexCoord((curvature[v] - kmin) / (kmax - kmin), 0.0);
     }
 
 private:

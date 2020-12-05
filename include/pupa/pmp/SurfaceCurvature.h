@@ -30,11 +30,17 @@ public:
 
     VertexProperty<double>& update_gauss_curvature();
     VertexProperty<double>& update_mean_curvature();
+
+    double max_gauss_curvature();
+    double max_mean_curvature();
 private:
     SurfaceMesh& mesh_; //!< the mesh
 
     VertexProperty<double> mean_curvature_;
     VertexProperty<double> gauss_curvature_;
+
+    double gauss_kmax_{-1};
+    double mean_kmax_{-1};
 };
 
 } // namespace pmp_pupa

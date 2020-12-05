@@ -235,3 +235,24 @@ pmp_pupa::VertexProperty<double>& pmp_pupa::SurfaceCurvature::update_mean_curvat
         mean_curvature_[v] = fabs(pmp_pupa::mean_curvature(mesh_, v));
     return mean_curvature_;
 }
+
+double pmp_pupa::SurfaceCurvature::max_gauss_curvature() {
+    if(gauss_kmax_ > 0) return gauss_kmax_;
+    std::vector<double> values(mesh_.n_vertices());
+    for (auto v : mesh_.vertices())
+        values[v.idx()] = gauss_curvature_[v];
+
+    std::sort(values.begin(), values.end());
+    gauss_kmax_ = values[values.size() - 1 - int(values.size()/20)];
+    return gauss_kmax_;
+}
+double pmp_pupa::SurfaceCurvature::max_mean_curvature() {
+    if(mean_kmax_ > 0) return mean_kmax_;
+    std::vector<double> values(mesh_.n_vertices());
+    for (auto v : mesh_.vertices())
+        values[v.idx()] = mean_curvature_[v];
+
+    std::sort(values.begin(), values.end());
+    mean_kmax_ = values[values.size() - 1 - int(values.size()/20)];
+    return mean_kmax_;
+}

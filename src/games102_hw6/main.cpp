@@ -75,7 +75,8 @@ void MeshViewer::process_imgui()
         if( ImGui::Button("Update Gaussian Curvature") )
         {
             set_draw_mode("Texture");
-            curvature_to_texcoord(data_->curvature_.update_gauss_curvature());
+            auto& k = data_->curvature_.update_gauss_curvature();
+            curvature_to_texcoord(k, data_->curvature_.max_gauss_curvature());
 
             update_mesh();
         }
@@ -83,7 +84,8 @@ void MeshViewer::process_imgui()
         if( ImGui::Button("Update Mean Curvature" ))
         {
             set_draw_mode("Texture");
-            curvature_to_texcoord(data_->curvature_.update_mean_curvature());
+            auto& k = data_->curvature_.update_mean_curvature();
+            curvature_to_texcoord(k, data_->curvature_.max_mean_curvature());
             update_mesh();
         }
 
