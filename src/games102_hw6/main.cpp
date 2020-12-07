@@ -52,6 +52,10 @@ void MeshViewer::process_imgui()
 #endif
 
             data_ = std::make_shared<MeshViewerData>(mesh_);
+            data_->curvature_.update_mean_curvature();
+            data_->curvature_.max_mean_curvature();
+            data_->curvature_.update_gauss_curvature();
+            data_->curvature_.max_gauss_curvature();
         }
 
         ImGui::SliderFloat("lambda", &data_->lambda_, 0.01, 0.8);
