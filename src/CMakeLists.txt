@@ -1,12 +1,8 @@
 
-add_library(pmp_pupa STATIC
-        pupa/Common.cpp
-        pupa/MinimalAreaSurface.cpp)
 
-
-target_link_libraries(pmp_pupa pmp)
-
-add_subdirectory(games102_hw6)
+add_library(pmp_pupa
+        pupa/pmp/RealizedEmCurve.cpp
+        )
 
 #add_executable(102GlobalUnfolding ../apps/EdgeLaplacianUnfolding.cpp)
 #target_link_libraries(102GlobalUnfolding pmp_vis)

@@ -21,7 +21,7 @@ add_subdirectory(extern/pmp-library)
 
 # add include directories
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/extern/dualquat)
 include_directories(${PROJECT_SOURCE_DIR}/extern/entityx)
 include_directories(${PROJECT_SOURCE_DIR}/extern/pmp-library/src)
@@ -62,3 +62,5 @@ endif()
 #add_subdirectory(extern/entityx)
 #add_subdirectory(tests)
 add_subdirectory(src)
+
+add_subdirectory(examples)
