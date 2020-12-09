@@ -8,11 +8,11 @@
 #include "EmCurveTools.h"
 using namespace pmp_pupa;
 
-RealizedEmCurvePolyMesh::RealizedEmCurvePolyMesh(const pmp::SurfaceMesh& mesh)
+RealizedEmCurvePolyMesh::RealizedEmCurvePolyMesh(pmp::SurfaceMesh& mesh)
     : host_mesh_(mesh), curve_mesh_(mesh)
 {
     emv_infos_ = curve_mesh_.add_vertex_property<EMVertexInfo>("v:embedd");
-    //    is_hybrid_ = curve_mesh_.add_edge_property<bool>("e:is_hybrid", false);
+    is_seam_ = curve_mesh_.add_edge_property<bool>("e:is_seam", false);
 }
 
 pmp::Halfedge RealizedEmCurvePolyMesh::hybrid_halfedge(const EMVertexInfo& em_v)
@@ -66,7 +66,11 @@ pmp::Halfedge RealizedEmCurvePolyMesh::insert_embedded_edge(EMVertexInfo em_v1, 
         auto h1 = curve_mesh_.next_halfedge(h0);
         for (; h1 != h0; h1 = curve_mesh_.next_halfedge(h1))
             if(curve_mesh_.to_vertex(h1) == v1)
-                return curve_mesh_.insert_edge(h0, h1);
+            {
+                auto new_h = curve_mesh_.insert_edge(h0, h1);
+                is_seam_[curve_mesh_.edge(new_h)] = true;
+                return new_h;
+            }
     }
     assert("Failed to add edge");
     return pmp::Halfedge();
@@ -100,4 +104,12 @@ pmp::Halfedge RealizedEmCurvePolyMesh::_search_hybrid(const EMVertexInfo& em_v)
             break;
     }
     return _h;
+}
+
+RealizedEmCurveSmoothing::RealizedEmCurveSmoothing(RealizedEmCurvePolyMesh& mesh): curve_mesh_(mesh){
+
+}
+
+void RealizedEmCurveSmoothing::implicitSmoothing() {
+
 }
