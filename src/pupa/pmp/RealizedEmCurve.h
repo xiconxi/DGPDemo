@@ -48,14 +48,14 @@ struct HostSurfaceMesh
         return pf + (pt - pf) * ev.w_;
     }
 
-    const pmp::SurfaceMesh& mesh_;
+    const pmp::SurfaceMesh mesh_;
 };
 
 class RealizedEmCurvePolyMesh
 {
 public:
 
-    explicit RealizedEmCurvePolyMesh(const pmp::SurfaceMesh& mesh);
+    explicit RealizedEmCurvePolyMesh(pmp::SurfaceMesh& mesh);
 
     pmp::Halfedge add_embedded_edge(EMVertexInfo em_v1, EMVertexInfo em_v2);
 
@@ -82,9 +82,19 @@ private:
     pmp::Halfedge _search_hybrid(const EMVertexInfo& em_v);
 
     HostSurfaceMesh host_mesh_;
-    pmp::SurfaceMesh curve_mesh_;
+    pmp::SurfaceMesh& curve_mesh_;
     pmp::VertexProperty<EMVertexInfo> emv_infos_;
-    //    pmp::EdgeProperty<bool> is_hybrid_;
+    pmp::EdgeProperty<bool> is_seam_;
+};
+
+class RealizedEmCurveSmoothing{
+public:
+    RealizedEmCurveSmoothing(RealizedEmCurvePolyMesh& mesh);
+
+    void implicitSmoothing();
+
+private:
+    RealizedEmCurvePolyMesh& curve_mesh_;
 };
 
 } // namespace pmp_pupa
