@@ -2,20 +2,20 @@
 // Created by pupa on 2020/10/6.
 //
 
-#include <pupa/pmp/RealizedEmCurve.h>
+#include <pupa/pmp/SurfaceSeamCurve.h>
 #include <pmp/SurfaceMesh.h>
 
 #include "EmCurveTools.h"
 using namespace pmp_pupa;
 
-RealizedEmCurvePolyMesh::RealizedEmCurvePolyMesh(pmp::SurfaceMesh& mesh)
+SeamedSurfaceMesh::SeamedSurfaceMesh(pmp::SurfaceMesh& mesh)
     : host_mesh_(mesh), curve_mesh_(mesh)
 {
-    emv_infos_ = curve_mesh_.add_vertex_property<EMVertexInfo>("v:embedd");
+    emv_infos_ = curve_mesh_.add_vertex_property<SeamVertexHost>("v:embedd");
     is_seam_ = curve_mesh_.add_edge_property<bool>("e:is_seam", false);
 }
 
-pmp::Halfedge RealizedEmCurvePolyMesh::hybrid_halfedge(const EMVertexInfo& em_v)
+pmp::Halfedge SeamedSurfaceMesh::hybrid_halfedge(const SeamVertexHost& em_v)
 {
     pmp::Vertex host_vt = host_mesh_.to_vertex(em_v);
     for (auto h : curve_mesh_.halfedges(host_mesh_.from_vertex(em_v)))
@@ -28,31 +28,32 @@ pmp::Halfedge RealizedEmCurvePolyMesh::hybrid_halfedge(const EMVertexInfo& em_v)
     return pmp::Halfedge();
 }
 
-pmp::Halfedge RealizedEmCurvePolyMesh::next_hybrid_halfedge(pmp::Halfedge h)
+pmp::Halfedge SeamedSurfaceMesh::next_hybrid_halfedge(pmp::Halfedge h)
 {
-    if (!is_embedded(curve_mesh_.to_vertex(h)))
+    if (!is_seamed(curve_mesh_.to_vertex(h)))
         return pmp::Halfedge();
     return curve_mesh_.cw_rotated_halfedge(curve_mesh_.next_halfedge(h));
 }
 
-pmp::Halfedge RealizedEmCurvePolyMesh::prev_hybrid_halfedge(pmp::Halfedge h)
+pmp::Halfedge SeamedSurfaceMesh::prev_hybrid_halfedge(pmp::Halfedge h)
 {
-    if (!is_embedded(curve_mesh_.from_vertex(h)))
+    if (!is_seamed(curve_mesh_.from_vertex(h)))
         return pmp::Halfedge();
     return curve_mesh_.ccw_rotated_halfedge(curve_mesh_.prev_halfedge(h));
 }
 
-pmp::Halfedge RealizedEmCurvePolyMesh::next_seam_halfedge(pmp::Halfedge )
+pmp::Halfedge SeamedSurfaceMesh::next_seam_halfedge(pmp::Halfedge )
 {
     assert("Not implement");
 }
 
-pmp::Halfedge RealizedEmCurvePolyMesh::prev_seam_halfedge(pmp::Halfedge )
+pmp::Halfedge SeamedSurfaceMesh::prev_seam_halfedge(pmp::Halfedge )
 {
     assert("Not implement");
 }
 
-pmp::Halfedge RealizedEmCurvePolyMesh::insert_embedded_edge(EMVertexInfo em_v1, EMVertexInfo em_v2)
+pmp::Halfedge SeamedSurfaceMesh::insert_embedded_edge(SeamVertexHost em_v1,
+                                                            SeamVertexHost em_v2)
 {
     pmp::Vertex v0 = _insert_embedded_vertex(em_v1);
     pmp::Vertex v1 = _insert_embedded_vertex(em_v2);
@@ -76,7 +77,7 @@ pmp::Halfedge RealizedEmCurvePolyMesh::insert_embedded_edge(EMVertexInfo em_v1, 
     return pmp::Halfedge();
 }
 
-pmp::Vertex RealizedEmCurvePolyMesh::_insert_embedded_vertex(EMVertexInfo em_v)
+pmp::Vertex SeamedSurfaceMesh::_insert_embedded_vertex(SeamVertexHost em_v)
 {
     // check whether it's already inserted
     for (auto h : curve_mesh_.halfedges(host_mesh_.from_vertex(em_v)))
@@ -93,7 +94,7 @@ pmp::Vertex RealizedEmCurvePolyMesh::_insert_embedded_vertex(EMVertexInfo em_v)
     return new_v;
 }
 
-pmp::Halfedge RealizedEmCurvePolyMesh::_search_hybrid(const EMVertexInfo& em_v)
+pmp::Halfedge SeamedSurfaceMesh::_search_hybrid(const SeamVertexHost& em_v)
 {
     pmp::Halfedge _h = hybrid_halfedge(em_v);
     if (!_h.is_valid())
@@ -104,12 +105,4 @@ pmp::Halfedge RealizedEmCurvePolyMesh::_search_hybrid(const EMVertexInfo& em_v)
             break;
     }
     return _h;
-}
-
-RealizedEmCurveSmoothing::RealizedEmCurveSmoothing(RealizedEmCurvePolyMesh& mesh): curve_mesh_(mesh){
-
-}
-
-void RealizedEmCurveSmoothing::implicitSmoothing() {
-
 }

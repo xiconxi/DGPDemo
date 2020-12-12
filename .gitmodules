@@ -1,9 +1,3 @@
 [submodule "extern/pmp-library"]
 	path = extern/pmp-library
 	url = https://github.com/pmp-library/pmp-library
-[submodule "extern/entityx"]
-	path = extern/entityx
-	url = https://github.com/alecthomas/entityx.git
-[submodule "extern/entt"]
-	path = extern/entt
-	url = https://github.com/skypjack/entt

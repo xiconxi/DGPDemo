@@ -1,7 +1,7 @@
 
 
 add_library(pmp_pupa
-        pupa/pmp/RealizedEmCurve.cpp
+        pupa/pmp/SurfaceSeamCurve.cpp
         )
 
 #add_executable(102GlobalUnfolding ../apps/EdgeLaplacianUnfolding.cpp)

@@ -1,11 +1,13 @@
 //
 // Created by pupa on 12/8/20.
 //
-#include <pupa/pmp/RealizedEmCurve.h>
+#include <pupa/pmp/SurfaceSeamCurve.h>
 #include <pupa/pmp/EmCurveTools.h>
 #include <pmp/visualization/MeshViewer.h>
 #include <imgui.h>
 #include <memory>
+
+#include "MinimalSeamCurve.h"
 
 using namespace pmp;
 
@@ -21,7 +23,7 @@ public:
     void circle_test(int n = 20);
 
 private:
-    std::shared_ptr<pmp_pupa::RealizedEmCurvePolyMesh> emCurve_;
+    std::shared_ptr<pmp_pupa::SeamedSurfaceMesh> emCurve_;
 };
 
 Viewer::Viewer(const char* title, int width, int height) : MeshViewer(title, width, height)
@@ -32,20 +34,30 @@ Viewer::Viewer(const char* title, int width, int height) : MeshViewer(title, wid
 void Viewer::process_imgui()
 {
     MeshViewer::process_imgui();
+
+    if (ImGui::CollapsingHeader("SeamCurve", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        if (ImGui::Button("Implicit Smoothing"))
+        {
+            pmp_pupa::MinimalSeamCurve seam_curve(*emCurve_);
+
+            seam_curve.implicit_smoothing();
+        }
+    }
 }
 
 void Viewer::isoline_test()
 {
     if (emCurve_.get() == nullptr)
-        emCurve_ = std::make_shared<pmp_pupa::RealizedEmCurvePolyMesh>(mesh_);
+        emCurve_ = std::make_shared<pmp_pupa::SeamedSurfaceMesh>(mesh_);
     auto bbox = mesh_.bounds();
     for (double d = bbox.min()[2]; d < bbox.max()[2]; d += (bbox.max() - bbox.min())[2] / 8)
     {
-        std::vector<pmp_pupa::EMVertexInfo> em_lines;
+        std::vector<pmp_pupa::SeamVertexHost> em_lines;
         for (auto em_line : pmp_pupa::PlaneSurfaceIntersection(mesh_, Eigen::Vector3d(0, 0, 1), d))
         {
-            auto em_v1 = pmp_pupa::EMVertexInfo(std::get<0>(em_line[0]), std::get<1>(em_line[0]));
-            auto em_v2 = pmp_pupa::EMVertexInfo(std::get<0>(em_line[1]), std::get<1>(em_line[1]));
+            auto em_v1 = pmp_pupa::SeamVertexHost(std::get<0>(em_line[0]), std::get<1>(em_line[0]));
+            auto em_v2 = pmp_pupa::SeamVertexHost(std::get<0>(em_line[1]), std::get<1>(em_line[1]));
 
             em_lines.push_back(em_v1);
             em_lines.push_back(em_v2);
@@ -77,12 +89,12 @@ void Viewer::circle_test(int n)
                             pmp::Vertex((i - 1) * n + j - 1), pmp::Vertex(i * n + j - 1)});
 
 
-    std::vector<std::array<pmp_pupa::EMVertexInfo,2>> em_lines;
+    std::vector<std::array<pmp_pupa::SeamVertexHost,2>> em_lines;
 
     if (emCurve_.get() == nullptr)
-        emCurve_ = std::make_shared<pmp_pupa::RealizedEmCurvePolyMesh>(mesh_);
+        emCurve_ = std::make_shared<pmp_pupa::SeamedSurfaceMesh>(mesh_);
     // circle seam
-    std::vector<pmp_pupa::EMVertexInfo> emv;
+    std::vector<pmp_pupa::SeamVertexHost> emv;
     for(auto f: mesh_.faces()){
         emv.clear();
         for(auto h: mesh_.halfedges(f)) {
