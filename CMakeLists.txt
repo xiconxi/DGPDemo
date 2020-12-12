@@ -61,6 +61,6 @@ endif()
 #set(ENTITYX_BUILD_TESTING OFF CACHE BOOL "Enable building of tests.")
 #add_subdirectory(extern/entityx)
 #add_subdirectory(tests)
-add_subdirectory(src)
+#add_subdirectory(src)
 
 add_subdirectory(examples)

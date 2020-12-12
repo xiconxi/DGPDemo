@@ -39,6 +39,7 @@ void Viewer::process_imgui()
     if (ImGui::Button("Reload Mesh"))
     {
         load_mesh(files[n]);
+        set_draw_mode("Hidden Line");
     }
 #endif
     ImGui::Spacing();
