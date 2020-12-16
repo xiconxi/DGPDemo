@@ -1,3 +1,6 @@
 [submodule "extern/pmp-library"]
 	path = extern/pmp-library
 	url = https://github.com/pmp-library/pmp-library
+[submodule "extern/voronoi"]
+	path = extern/voronoi
+	url = https://github.com/JCash/voronoi

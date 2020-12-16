@@ -1,7 +1,9 @@
 
+file(GLOB SOURCES pupa/pmp/*.cpp pupa/pmp/smooth/*.cpp)
+file(GLOB HEADERS ./*.h)
 
 add_library(pmp_pupa
-        pupa/pmp/SurfaceSeamCurve.cpp
+        ${SOURCES}
         )
 
 #add_executable(102GlobalUnfolding ../apps/EdgeLaplacianUnfolding.cpp)
