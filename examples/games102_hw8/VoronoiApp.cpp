@@ -60,7 +60,7 @@ public:
         return relax_points();
     }
 
-    std::string export_svg(std::string file, bool with_polygon = true);
+    std::string export_svg(std::string file);
 private:
     jcv_diagram            diagram_{0};
     std::vector<jcv_point> points_;
@@ -72,12 +72,12 @@ int main(int argc, char** argv)
 {
     jcv_rect bounding_box = {{0.0f, 0.0f}, {1.0f, 1.0f}};
     std::string density_image = argv[1];
-    CentroidVoronoiDiagram cvd( bounding_box, 128*128, density_image);
+    CentroidVoronoiDiagram cvd( bounding_box, 100, density_image);
     for(int i = 0; i < 1000; i++)
     {
         double max_diff = cvd.lloyd();
         if((i+1)%4 == 0)
-            cvd.export_svg(argv[2]+std::to_string(int(i/4))+".svg", false);
+            cvd.export_svg(argv[2]+std::to_string(int(i/4))+".svg");
         if(max_diff < 1e-7) break;
         std::cout << "\r" << "lloyd: " << i << ' '<< max_diff << std::endl ;
     }
@@ -118,7 +118,7 @@ jcv_point CentroidVoronoiDiagram::varying_polygon_centroid(const jcv_graphedge* 
     return center;
 }
 
-std::string  CentroidVoronoiDiagram::export_svg(std::string output_file, bool with_polygon) {
+std::string  CentroidVoronoiDiagram::export_svg(std::string output_file) {
     std::stringstream svg_str;
     double w = 512;
     double h = density_.is_constant() ? 512: density_.height()/double(density_.width())*512;
@@ -126,7 +126,7 @@ std::string  CentroidVoronoiDiagram::export_svg(std::string output_file, bool wi
             << R"(" xmlns="http://www.w3.org/2000/svg" >)"
             << "<rect width=\"100%\" height=\"100%\" fill=\"white\"/>\n";
     const jcv_site* sites = jcv_diagram_get_sites(&diagram_);
-    for (size_t i = 0; i < diagram_.numsites && with_polygon; i++)
+    for (size_t i = 0; i < diagram_.numsites && density_.is_constant(); i++)
     {
         svg_str << "<polygon points=\"";
         jcv_graphedge* graph_edge = sites[i].edges;
@@ -136,17 +136,18 @@ std::string  CentroidVoronoiDiagram::export_svg(std::string output_file, bool wi
             svg_str << p1.x*w << ',' << p1.y*h << ' ' << p2.x*w << ',' << p2.y*h << ' ';
             graph_edge = graph_edge->next;
         }
-        svg_str << R"(" fill="#3d3dcb" stroke="white" stroke-width="2" />)" << "\n";
+        svg_str << R"(" fill="#1d1d9b" stroke="white" stroke-width="2" />)" << "\n";
     }
 
     for( int i = 0; i < diagram_.numsites; ++i )
     {
         const jcv_site* site = &sites[i];
         jcv_point p = site->p, pc = polygon_centroid(site->edges);
-        if(with_polygon)
+        if(density_.is_constant()){
             svg_str << "<circle cx=\"" << pc.x * w  << "\" cy=\"" << pc.y*h << R"(" r="1" fill="red"/>)" << '\n';
-        svg_str << "<circle cx=\"" << p.x * w  << "\" cy=\"" << p.y*h << R"(" r="1" fill="black"/>)" << '\n';
-
+            svg_str << "<circle cx=\"" << p.x * w  << "\" cy=\"" << p.y*h << R"(" r="1" fill="yellow"/>)" << '\n';
+        }else
+            svg_str << "<circle cx=\"" << p.x * w  << "\" cy=\"" << p.y*h << R"(" r="1" fill="black"/>)" << '\n';
     }
 
     svg_str << "</svg>";

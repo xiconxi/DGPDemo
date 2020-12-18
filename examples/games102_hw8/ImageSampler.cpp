@@ -20,6 +20,7 @@ ImageSampler::ImageSampler(std::string filename)
 
     int width_, height_, n_;
     std::uint8_t* img = stbi_load(filename.c_str(), &width_, &height_, &n_, 1);
+    if ( img == nullptr) return ;
     std::cout << "image " << filename << " > " << width_ << ' ' << height_ << ' '<< n_ << std::endl;
     image_.resize(height_, width_);
     for (int j = 0; j < height_; j++)
