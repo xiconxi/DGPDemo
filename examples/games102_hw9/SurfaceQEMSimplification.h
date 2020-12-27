@@ -23,9 +23,11 @@ struct Quadric
 };
 
 template <class HeapEntry, class SortInterface>
-struct MinHeap : public std::vector<HeapEntry>
+class MinHeap : protected std::vector<HeapEntry>
 {
 public:
+    explicit MinHeap(SortInterface& interface) : interface_(interface) {}
+
     void update(HeapEntry e) {
         size_t i = interface_[e];
         up_heap(i);
@@ -54,6 +56,15 @@ public:
         return e;
     }
 
+    size_t size() { return ((std::vector<HeapEntry>*)this)->size(); }
+
+    void print() {
+        for(int i = 0 ; i < this->size(); i++) {
+            std::cout << entry(i) << ':' << interface_(entry(i)) << '\t';
+        }
+        std::cout << std::endl;
+    }
+
 private:
     inline size_t parent(size_t i) { return (i - 1) >> 1; }
     inline size_t left(size_t i) { return (i << 1) + 1; }
@@ -63,7 +74,7 @@ private:
 
     void up_heap(size_t i) {
         HeapEntry e = entry(i);
-        for(;i > 0 && interface_(entry(i)) < interface_(entry(parent(i))); i = parent(i))
+        for(;i > 0 && interface_(e) < interface_(entry(parent(i))); i = parent(i))
             set(i, entry(parent(i)));
         set(i, e);
     }
@@ -71,19 +82,19 @@ private:
     void down_heap(size_t i) {
         HeapEntry e = entry(i);
         size_t s = this->size();
-        while (i < s ) {
-            if(left(i) < s && interface_(entry(left(i))) < interface_(entry(i)) ) {
-                set(i, entry(left(i)));
-                i = left(i);
-            }else if(right(i) < s && interface_(entry(right(i))) < interface_(entry(i)) ) {
-                set(i, entry(right(i)));
-                i = right(i);
-            }else
+        for(size_t child; left(i) < s; i = child)
+        {
+            child = left(i);
+            if (child + 1 < s && interface_(entry(child + 1)) < interface_(entry(child)))
+                child++;
+
+            if (interface_(entry(child)) > interface_(e))
                 break;
+            set(i, entry(child));
         }
         set(i, e);
     }
-    SortInterface interface_;
+    SortInterface& interface_;
 };
 
 class SurfaceQEMSimplification
@@ -91,17 +102,12 @@ class SurfaceQEMSimplification
 public:
     explicit SurfaceQEMSimplification(pmp::SurfaceMesh& mesh);
 
-    void simplification(size_t n_vertex)
-    {
-//        for (auto e : mesh_.edges())
-//            ;
-    }
+    void simplification(size_t n_vertex) ;
 
 private:
     pmp::SurfaceMesh& mesh_;
     pmp::VertexProperty<Quadric> vquadric_;
     pmp::FaceProperty<pmp::Normal> fnormal_;
-    pmp::EdgeProperty<Quadric> equadric_;
 };
 
 } // namespace pmp_pupa

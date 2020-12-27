@@ -11,14 +11,6 @@
 using namespace pmp;
 
 
-struct VertexZSortInterface {
-    size_t operator [](pmp::Vertex v) {return idx_[v];}
-    double operator ()(pmp::Vertex v) {return vprio_[v];}
-
-    pmp::VertexProperty<double> vprio_;
-    pmp::VertexProperty<size_t> idx_;
-};
-
 class Viewer : public MeshViewer
 {
 public:
@@ -26,8 +18,6 @@ public:
 
 protected:
     virtual void process_imgui();
-
-    pmp_pupa::SurfaceQEMSimplification
 };
 
 Viewer::Viewer(const char* title, int width, int height) : MeshViewer(title, width, height) {}
@@ -49,6 +39,12 @@ void Viewer::process_imgui()
 #endif
     ImGui::Spacing();
 
+    if(ImGui::Button("Simplify")) {
+        pmp_pupa::SurfaceQEMSimplification surface_simplify(mesh_);
+
+        surface_simplify.simplification(1000);
+
+    }
 }
 
 int main(int argc, char** argv)
