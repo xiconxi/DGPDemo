@@ -19,6 +19,25 @@ struct Quadric
     {
         metric = Eigen::Vector4d(a, b, c, d) * Eigen::RowVector4d(a, b, c, d);
     }
+
+    bool minima(pmp::Point& p) const {
+        auto m = metric;
+        m.row(3) = Eigen::RowVector4d(0, 0, 0, 1);
+        if(std::abs(m.determinant()) < 1e-5)
+            return false;
+
+        Eigen::Vector4d v = m.fullPivHouseholderQr().solve(m.row(3).transpose());
+        p = pmp::Point(v[0], v[1], v[2]);
+        return true;
+    }
+
+    double operator () (const pmp::Point& p) const {
+        Eigen::Vector4d v = (Eigen::Vector4d() << p[0], p[1], p[2], 1).finished();
+        return v.transpose() * metric * v;
+    }
+
+    void operator +=(Quadric rhs) { metric += rhs.metric; }
+
     Eigen::Matrix4d metric;
 };
 
@@ -39,6 +58,17 @@ public:
     void insert(HeapEntry e) {
         this->push_back(e);
         up_heap(this->size() - 1);
+    }
+
+    void reset_heap(std::vector<HeapEntry>& es) {
+        this->clear();
+        for(size_t i = 0; i < es.size(); i++)
+        {
+            this->push_back(es[i]);
+            interface_[es[i]] = i;
+        }
+        for(size_t i = es.size()/2; i < es.size(); i++)
+            up_heap(i);
     }
 
     void remove(HeapEntry e) {
@@ -72,6 +102,12 @@ private:
     inline HeapEntry& entry(size_t i) { return this->operator[](i); }
     inline void set(size_t i, HeapEntry& item_) { interface_[entry(i) = item_] = i; }
 
+    inline void swap(size_t i, size_t j) {
+        HeapEntry _i = entry(i), _j = entry(j);
+        set(i, _j);
+        set(j, _i);
+    }
+
     void up_heap(size_t i) {
         HeapEntry e = entry(i);
         for(;i > 0 && interface_(e) < interface_(entry(parent(i))); i = parent(i))
@@ -97,17 +133,55 @@ private:
     SortInterface& interface_;
 };
 
-class SurfaceQEMSimplification
+
+struct  EdgeQuadricDistance  {
+
+    explicit EdgeQuadricDistance(pmp::SurfaceMesh& mesh):mesh_(mesh) {
+        idx_ = mesh_.edge_property<std::int32_t>("e:heap_idx", -1);
+        eprio_ = mesh_.edge_property<double>("e:eprio_", 1e5);
+    }
+
+    ~EdgeQuadricDistance(){
+        mesh_.remove_edge_property(idx_);
+        mesh_.remove_edge_property(eprio_);
+    }
+
+    std::int32_t& operator [](pmp::Edge e) {return idx_[e];}
+    double& operator ()(pmp::Edge e) {return eprio_[e];}
+
+    void reset_value() {
+        std::fill(idx_.vector().begin(), idx_.vector().end(), -1);
+        std::fill(eprio_.vector().begin(), eprio_.vector().end(), 1e5);
+    }
+
+private:
+    pmp::EdgeProperty<double> eprio_;
+    pmp::EdgeProperty<std::int32_t> idx_;
+    pmp::SurfaceMesh& mesh_;
+};
+
+class SurfaceQEM
 {
 public:
-    explicit SurfaceQEMSimplification(pmp::SurfaceMesh& mesh);
+    explicit SurfaceQEM(pmp::SurfaceMesh& mesh);
 
     void simplification(size_t n_vertex) ;
 
 private:
+
+    std::tuple<pmp::Point, double> find_minima(pmp::Edge e);
+
+    void initial_quadric();
+
+    bool is_collapse_legal(pmp::Halfedge h, pmp::Point p);
+
     pmp::SurfaceMesh& mesh_;
     pmp::VertexProperty<Quadric> vquadric_;
+    pmp::EdgeProperty<pmp::Point> eoptimal_q_;
     pmp::FaceProperty<pmp::Normal> fnormal_;
+
+    EdgeQuadricDistance quadric_distance;
+    MinHeap<pmp::Edge, EdgeQuadricDistance> heap_;
 };
 
 } // namespace pmp_pupa

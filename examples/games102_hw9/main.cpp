@@ -6,7 +6,7 @@
 #include <pmp/algorithms/SurfaceCurvature.h>
 #include <imgui.h>
 #include <imgui_internal.h>
-#include "SurfaceQEMSimplification.h"
+#include "SurfaceQEM.h"
 
 using namespace pmp;
 
@@ -18,6 +18,8 @@ public:
 
 protected:
     virtual void process_imgui();
+
+    pmp_pupa::SurfaceQEM* simplify_{nullptr};
 };
 
 Viewer::Viewer(const char* title, int width, int height) : MeshViewer(title, width, height) {}
@@ -40,10 +42,13 @@ void Viewer::process_imgui()
     ImGui::Spacing();
 
     if(ImGui::Button("Simplify")) {
-        pmp_pupa::SurfaceQEMSimplification surface_simplify(mesh_);
+        if(simplify_ == nullptr)
+            simplify_ = new pmp_pupa::SurfaceQEM(mesh_);
 
-        surface_simplify.simplification(1000);
+        simplify_->simplification(mesh_.n_vertices()*0.8);
+        update_mesh();
 
+        std::cout << "Simplified !!!!!!!!!! " << std::endl;
     }
 }
 
