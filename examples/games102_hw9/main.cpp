@@ -41,11 +41,16 @@ void Viewer::process_imgui()
 #endif
     ImGui::Spacing();
 
+    static int percent = 20;
+    ImGui::PushItemWidth(100);
+    ImGui::SliderInt("Percentage", &percent, 5, 90);
+    ImGui::PopItemWidth();
+
     if(ImGui::Button("Simplify")) {
         if(simplify_ == nullptr)
             simplify_ = new pmp_pupa::SurfaceQEM(mesh_);
 
-        simplify_->simplification(mesh_.n_vertices()*0.8);
+        simplify_->simplification(mesh_.n_vertices()*0.01*percent);
         update_mesh();
 
         std::cout << "Simplified !!!!!!!!!! " << std::endl;

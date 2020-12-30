@@ -27,35 +27,38 @@ void SurfaceQEM::simplification(size_t n_vertex)
     initial_quadric();
     while(heap_.size() && mesh_.n_vertices() > n_vertex) {
         auto e = heap_.pop_front();
-
 //        std::cout << mesh_.n_vertices() << ' ' << n_vertex << ' '<< e << ' ' << quadric_distance(e)  << std::endl;
-
-        auto h = mesh_.halfedge(e, 0);
-
-        auto v_f = mesh_.from_vertex(h), v_t = mesh_.to_vertex(h);
-        if( mesh_.is_boundary(v_f) || mesh_.is_boundary(v_t))
+        if(!is_collapse_legal(e, eoptimal_q_[e]))
             continue;
-        if( !mesh_.is_collapse_ok(h)) {
-            if(!mesh_.is_collapse_ok(mesh_.halfedge(e, 1)))
-                continue;
+        auto h = mesh_.halfedge(e, 0);
+        if( !mesh_.is_collapse_ok(h))
             h = mesh_.opposite_halfedge(h);
-            std::swap(v_t, v_f);
-        }
-        vquadric_[v_t] += vquadric_[v_f];
+        if( !mesh_.is_collapse_ok(h))
+            continue;
+
         mesh_.collapse(h);
+
+        // post update
+        auto v_f = mesh_.from_vertex(h), v_t = mesh_.to_vertex(h);
+        vquadric_[v_t] += vquadric_[v_f];
         mesh_.position(v_t) = eoptimal_q_[e];
-        //post update
-//        std::cout << "update: >>> ";
+
         for(auto h1: mesh_.halfedges(v_t)) {
             auto e1 = mesh_.edge(h1);
-            std::cout << e1 << ' ';
+            auto f = mesh_.face(h1);
             std::tie(eoptimal_q_[e1], quadric_distance(e1)) = find_minima(e1);
+            fnormal_[f] = pmp::SurfaceNormals::compute_face_normal(mesh_, f);
             if(heap_.is_stored(e1))
                 heap_.update(e1);
+            else
+                heap_.insert(e1);
         }
-        std::cout << "\n finished： " << mesh_.n_edges() <<' ' << n_vertex << ' ' << mesh_.n_vertices() << std::endl;
     }
     mesh_.garbage_collection();
+
+    pmp::SurfaceNormals::compute_face_normals(mesh_);
+
+    std::cout << "N " << mesh_.n_vertices() << std::endl;
 }
 
 
@@ -75,7 +78,6 @@ std::tuple<pmp::Point, double> SurfaceQEM::find_minima(pmp::Edge e) {
     }
 }
 
-
 void SurfaceQEM::initial_quadric() {
     quadric_distance.reset_value();
     std::vector<pmp::Edge> edges;
@@ -87,6 +89,57 @@ void SurfaceQEM::initial_quadric() {
     }
     heap_.reset_heap(edges);
 
+}
+
+bool SurfaceQEM::is_collapse_legal(pmp::Edge e, pmp::Point p)
+{
+    auto h = mesh_.halfedge(e, 0);
+    auto v_f = mesh_.from_vertex(h), v_t = mesh_.to_vertex(h);
+    if (mesh_.is_boundary(v_f) || mesh_.is_boundary(v_t) )
+        return false;
+
+    pmp::Face f1 = mesh_.face(h), f2 = mesh_.face(mesh_.opposite_halfedge(h));
+    // aspect_ratio  & face flip
+    double aspect_ratio_before{0}, aspect_ratio_after{0};
+    bool is_face_flip = false;
+    for (auto f : mesh_.faces(v_f))
+        aspect_ratio_before = std::max(aspect_ratio_before, aspect_ratio(f));
+    for (auto f : mesh_.faces(v_t))
+        aspect_ratio_before = std::max(aspect_ratio_before, aspect_ratio(f));
+
+    std::swap(mesh_.position(v_f), p);
+    for (auto f : mesh_.faces(v_f))
+    {
+        if (f == f1 || f == f2)
+            continue;
+        aspect_ratio_after = std::max(aspect_ratio_after, aspect_ratio(f));
+        pmp::Normal n1 = pmp::SurfaceNormals::compute_face_normal(mesh_, f);
+        is_face_flip = is_face_flip || pmp::dot(fnormal_[f], n1) < 0;
+    }
+    std::swap(mesh_.position(v_f), mesh_.position(v_t));
+    for (auto f : mesh_.faces(v_t))
+    {
+        if (f == f1 || f == f2)
+            continue;
+        aspect_ratio_after = std::max(aspect_ratio_after, aspect_ratio(f));
+        pmp::Normal n1 = pmp::SurfaceNormals::compute_face_normal(mesh_, f);
+        is_face_flip = is_face_flip || pmp::dot(fnormal_[f], n1) < 0;
+    }
+    std::swap(mesh_.position(v_f), p);
+    std::swap(mesh_.position(v_t), p);
+    return !is_face_flip && aspect_ratio_after <  10 * aspect_ratio_before && aspect_ratio_after < 20 &&
+           mesh_.valence(v_f) + mesh_.valence(v_t) < 16; // 6 + 6 + 4
+}
+
+double SurfaceQEM::aspect_ratio(pmp::Face f) const {
+    std::vector<pmp::Point> p;
+    p.reserve(3);
+    for(auto v: mesh_.vertices(f))
+        p.emplace_back(mesh_.position(v));
+    double l = std::max(pmp::sqrnorm(p[0] - p[1]), pmp::sqrnorm(p[2] - p[1]));
+    l = fmax(l,  pmp::sqrnorm(p[0] - p[2]));
+    double a = pmp::norm(pmp::cross(p[2]-p[1], p[0]-p[1]));
+    return l/a;
 }
 
 } // namespace pmp_pupa

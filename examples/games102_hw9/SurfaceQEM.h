@@ -134,6 +134,7 @@ private:
 };
 
 
+
 struct  EdgeQuadricDistance  {
 
     explicit EdgeQuadricDistance(pmp::SurfaceMesh& mesh):mesh_(mesh) {
@@ -173,7 +174,9 @@ private:
 
     void initial_quadric();
 
-    bool is_collapse_legal(pmp::Halfedge h, pmp::Point p);
+    bool is_collapse_legal(pmp::Edge e, pmp::Point p);
+
+    double aspect_ratio(pmp::Face f) const;
 
     pmp::SurfaceMesh& mesh_;
     pmp::VertexProperty<Quadric> vquadric_;
