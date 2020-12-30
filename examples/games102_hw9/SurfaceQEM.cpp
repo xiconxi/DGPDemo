@@ -127,7 +127,7 @@ bool SurfaceQEM::is_collapse_legal(pmp::Edge e, pmp::Point p)
     }
     std::swap(mesh_.position(v_f), p);
     std::swap(mesh_.position(v_t), p);
-    return !is_face_flip && aspect_ratio_after <  10 * aspect_ratio_before && aspect_ratio_after < 20 &&
+    return !is_face_flip && aspect_ratio_after <  2 * aspect_ratio_before && aspect_ratio_after < 5 &&
            mesh_.valence(v_f) + mesh_.valence(v_t) < 16; // 6 + 6 + 4
 }
 
