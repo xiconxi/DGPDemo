@@ -2,7 +2,9 @@
 // Created by pupa on 12/23/20.
 //
 
+#include "VertexSplit.h"
 #include "SurfaceQEM.h"
+
 #include <pmp/algorithms/SurfaceNormals.h>
 
 namespace pmp_pupa {
@@ -22,12 +24,20 @@ SurfaceQEM::SurfaceQEM(pmp::SurfaceMesh &mesh)
     }
 }
 
-void SurfaceQEM::simplification(size_t n_vertex)
+SurfaceQEM::~SurfaceQEM()
+{
+    mesh_.remove_vertex_property(vquadric_);
+    mesh_.remove_edge_property(eoptimal_q_);
+}
+
+std::vector<CollapseData> SurfaceQEM::simplification(size_t n_vertex)
 {
     initial_quadric();
+
+    LODSurfaceMesh lod_mesh_(mesh_);
+
     while(heap_.size() && mesh_.n_vertices() > n_vertex) {
         auto e = heap_.pop_front();
-//        std::cout << mesh_.n_vertices() << ' ' << n_vertex << ' '<< e << ' ' << quadric_distance(e)  << std::endl;
         if(!is_collapse_legal(e, eoptimal_q_[e]))
             continue;
         auto h = mesh_.halfedge(e, 0);
@@ -36,29 +46,38 @@ void SurfaceQEM::simplification(size_t n_vertex)
         if( !mesh_.is_collapse_ok(h))
             continue;
 
-        mesh_.collapse(h);
-
-        // post update
         auto v_f = mesh_.from_vertex(h), v_t = mesh_.to_vertex(h);
         vquadric_[v_t] += vquadric_[v_f];
-        mesh_.position(v_t) = eoptimal_q_[e];
+
+        CollapseData args;
+        args.v_f = mesh_.from_vertex(h);
+        args.v_t = mesh_.to_vertex(h);
+        args.p_f = mesh_.position(args.v_f);
+        args.p_t = mesh_.position(args.v_t);
+        args.p_target = eoptimal_q_[e];
+        lod_mesh_.push_back(args);
+        lod_mesh_.operator--();
+
+//        assert(mesh_.find_halfedge(args.v_l, args.v_t).is_valid());
+//        assert(mesh_.find_halfedge(args.v_r, args.v_t).is_valid());
 
         for(auto h1: mesh_.halfedges(v_t)) {
             auto e1 = mesh_.edge(h1);
-            auto f = mesh_.face(h1);
             std::tie(eoptimal_q_[e1], quadric_distance(e1)) = find_minima(e1);
-            fnormal_[f] = pmp::SurfaceNormals::compute_face_normal(mesh_, f);
             if(heap_.is_stored(e1))
                 heap_.update(e1);
             else
                 heap_.insert(e1);
         }
+
     }
+
     mesh_.garbage_collection();
 
     pmp::SurfaceNormals::compute_face_normals(mesh_);
+    pmp::SurfaceNormals::compute_vertex_normals(mesh_);
 
-    std::cout << "N " << mesh_.n_vertices() << std::endl;
+    return lod_mesh_.sequence();
 }
 
 
@@ -127,7 +146,7 @@ bool SurfaceQEM::is_collapse_legal(pmp::Edge e, pmp::Point p)
     }
     std::swap(mesh_.position(v_f), p);
     std::swap(mesh_.position(v_t), p);
-    return !is_face_flip && aspect_ratio_after <  2 * aspect_ratio_before && aspect_ratio_after < 5 &&
+    return !is_face_flip && aspect_ratio_after <  2  * aspect_ratio_before && aspect_ratio_after < 10 &&
            mesh_.valence(v_f) + mesh_.valence(v_t) < 16; // 6 + 6 + 4
 }
 
@@ -141,5 +160,40 @@ double SurfaceQEM::aspect_ratio(pmp::Face f) const {
     double a = pmp::norm(pmp::cross(p[2]-p[1], p[0]-p[1]));
     return l/a;
 }
+
+
+size_t LODSurfaceMesh::operator ++ () {
+    assert(std::distance(it_, sequence_.rend()) > 0);
+    auto v_new = mesh_.add_vertex(it_->p_f);
+    mesh_.position(it_->v_t) = it_->p_t;
+    auto h = vertex_split(mesh_, v_new, it_->v_t, it_->v_l, it_->v_r);
+    swap(mesh_, it_->v_f, pmp::Vertex(mesh_.n_vertices()-1));
+
+    it_->v_t = mesh_.to_vertex(h);
+    it_->v_l = mesh_.to_vertex(mesh_.next_halfedge(h));
+    it_->v_r = mesh_.to_vertex(mesh_.next_halfedge(mesh_.opposite_halfedge(h)));
+
+    it_++;
+    return mesh_.n_vertices();
+}
+
+size_t LODSurfaceMesh::operator -- () {
+    assert(std::distance(sequence_.rbegin(), it_) > 0);
+    it_--;
+
+    auto h = mesh_.find_halfedge(it_->v_f, it_->v_t);
+    pmp_pupa::swap(mesh_, it_->v_f, pmp::Vertex(mesh_.n_vertices()-1));
+
+    it_->v_t = mesh_.to_vertex(h);
+    it_->v_l = mesh_.to_vertex(mesh_.next_halfedge(h));
+    it_->v_r = mesh_.to_vertex(mesh_.next_halfedge(mesh_.opposite_halfedge(h)));
+
+    mesh_.position(it_->v_t) = it_->p_target;
+
+    mesh_.collapse(h);
+
+    return mesh_.n_vertices();
+}
+
 
 } // namespace pmp_pupa

@@ -133,8 +133,6 @@ private:
     SortInterface& interface_;
 };
 
-
-
 struct  EdgeQuadricDistance  {
 
     explicit EdgeQuadricDistance(pmp::SurfaceMesh& mesh):mesh_(mesh) {
@@ -161,12 +159,19 @@ private:
     pmp::SurfaceMesh& mesh_;
 };
 
+struct CollapseData {
+    pmp::Vertex v_f, v_t, v_l, v_r;
+    pmp::Point p_f, p_t, p_target;
+};
+
 class SurfaceQEM
 {
 public:
     explicit SurfaceQEM(pmp::SurfaceMesh& mesh);
 
-    void simplification(size_t n_vertex) ;
+    ~SurfaceQEM();
+
+    std::vector<CollapseData> simplification(size_t n_vertex) ;
 
 private:
 
@@ -186,5 +191,42 @@ private:
     EdgeQuadricDistance quadric_distance;
     MinHeap<pmp::Edge, EdgeQuadricDistance> heap_;
 };
+
+
+
+
+class LODSurfaceMesh{
+public:
+    explicit LODSurfaceMesh(pmp::SurfaceMesh& mesh) : mesh_(mesh) { it_ = sequence_.rbegin(); }
+    explicit LODSurfaceMesh(pmp::SurfaceMesh& mesh, std::vector<CollapseData>& collapse_data)
+        : sequence_(collapse_data), mesh_(mesh){
+        it_ = sequence_.rbegin();
+    }
+
+    void push_back(CollapseData& data)
+    {
+        sequence_.push_back(data);
+        it_ = ++sequence_.rbegin();
+    }
+
+    std::vector<CollapseData>& sequence() { return sequence_; }
+
+    // inverse decimation
+    size_t operator ++ ();
+
+    // decimation
+    size_t operator -- ();
+
+    size_t max_vertices() { return mesh_.n_vertices() + std::distance(it_, sequence_.rend()); }
+
+    size_t min_vertices() { return mesh_.n_vertices() - std::distance(sequence_.rbegin(), it_); }
+
+private:
+
+    pmp::SurfaceMesh& mesh_;
+    std::vector<CollapseData> sequence_;
+    std::vector<CollapseData>::reverse_iterator it_;
+};
+
 
 } // namespace pmp_pupa
